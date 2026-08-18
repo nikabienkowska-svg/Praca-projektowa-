@@ -1,0 +1,12 @@
+{
+  "corpus_source": "arxiv-metadata-oai-snapshot-001.json (5.22 GB full snapshot)",
+  "built": "2026-07-16, Theseus rebuild",
+  "full_superset_unique_papers": 195149,
+  "full_superset_per_category": {"q-bio.NC": 11902, "cs.AI": 172726, "cs.NE": 17475},
+  "natalia_report2_claim": {"total": 34512, "q-bio.NC": 12405, "cs.AI": 15120, "cs.NE": 6987},
+  "scope_rule": "q-bio.NC (spine, all kept) + cs.AI/cs.NE papers cross-listed to q-bio* OR whose title/abstract matches a neuroscience/cognition keyword set",
+  "scoped_corpus_papers": 36314,
+  "scoped_per_category_paper_hits": {"q-bio.NC": 11902, "cs.AI": 22403, "cs.NE": 5666},
+  "output_file": "data/corpus.jsonl.gz (id, title, abstract, categories)",
+  "note": "cs.AI/cs.NE counts are paper-hit counts; papers can carry >1 target category, so hits sum above 36314 unique papers"
+}
