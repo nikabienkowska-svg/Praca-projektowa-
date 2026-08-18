@@ -65,16 +65,6 @@ Są istotniejsze niż same liczby i muszą znaleźć się we wnioskach.
 
 Wobec tego H1 wolno odrzucić wyłącznie w brzmieniu: *ten konkretny model semantyczny, z tą agregacją profilu i przy kategorialnej definicji trafności, nie pobił dostrojonego modelu leksykalnego*. H2 broni się bez zastrzeżeń.
 
-## Historia poprawek
-
-Wersja poprzednia raportowała NDCG@10 = 0,158 dla TF-IDF. Różnica względem 0,321 powyżej nie wynika ze zmiany modelu, tylko z naprawy pomiaru:
-
-- **Klucz odpowiedzi był obcinany do 60 pozycji** (`gt_cap`), podczas gdy zbiory relewantne sięgały 1918 artykułów — 36 z 62 czytelników miało ucięty klucz. Trafienie w faktycznie relewantny artykuł spoza tych 60 liczyło się jako pomyłka. Klucz jest teraz odtwarzany z reguły kategorii dla całego korpusu (rekonstrukcja jest weryfikowana asercją względem `n_relevant_total`).
-- **Dodano BM25.** Random i Popularity dawały wyniki na poziomie zera, więc pobicie ich niczego nie dowodziło.
-- **Dodano drugą agregację profilu dla MiniLM** (`max-sim` obok `mean`), żeby rozstrzygnąć, czy model przegrywa jako model, czy jako sposób budowy profilu z ośmiu artykułów startowych.
-- **Poprawiono statystykę:** korekta Holma na wielokrotne porównania i wielkość efektu obok p-value.
-- **Naprawiono ścieżki do danych** (notebook czytał z pustego katalogu `data/`) i **dopisano zapowiadany interfejs Gradio**, którego wcześniej w notebooku nie było.
-
 ## Technologie
 
 Python (NumPy, pandas, SciPy) · scikit-learn · Sentence-Transformers · Gradio · Jupyter / Google Colab
