@@ -40,7 +40,7 @@ Wiersze MiniLM uzupełnia się po uruchomieniu notebooka na GPU (kodowanie 36 ty
 
 ## Jak uruchomić
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nikabienkowska-svg/Praca-projektowa-/blob/main/recommender_pipeline.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1yAdOfpc8Kn4cuqiVDBcC7gBgEzjQxKSC?usp=sharing)
 
 1. Kliknij **Open in Colab**.
 2. `Środowisko wykonawcze → Zmień typ środowiska wykonawczego → T4 GPU`.
