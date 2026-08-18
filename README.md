@@ -1,4 +1,4 @@
-# Praca-projektowa-
+# Praca-projektowa
 # 🧠 Porównanie skuteczności modeli rekomendacyjnych (Artykuły Naukowe)
 
 Ten projekt to w 100% odtwarzalny rurociąg analityczny (pipeline), którego celem jest porównanie skuteczności dwóch systemów rekomendacji artykułów naukowych opartych na treści (Content-Based Filtering). 
