@@ -21,11 +21,13 @@ Zaskakująco, nowocześniejszy model poległ w starciu z klasyką:
 * **Wydajność (H2 potwierdzona):** TF-IDF okazał się znacznie szybszy i tańszy w użyciu. Budowa indeksu zajęła ok. 33 sekundy (na CPU), podczas gdy kodowanie MiniLM zajęło ok. 120 sekund (i to przy wykorzystaniu akceleratora GPU).
 
 ## 🚀 Jak uruchomić projekt
-Najprostszym sposobem na uruchomienie projektu jest wykorzystanie środowiska **Google Colab**.
+Projekt jest w pełni skonfigurowany do działania w chmurze. Nie musisz niczego instalować na swoim komputerze.
 
-1. Otwórz notatnik `.ipynb` w Google Colab.
-2. W górnym menu wybierz `Środowisko wykonawcze` -> `Zmień typ środowiska wykonawczego` i ustaw akcelerator sprzętowy na **T4 GPU** (wymagane dla modelu MiniLM).
-3. Uruchom wszystkie komórki od góry do dołu. Skrypt automatycznie pobierze dane z tego repozytorium, zainstaluje biblioteki, przeprowadzi testy i wygeneruje raporty CSV.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-xYVD2OnSejjnXvWKofqBp5wBK9uVjkJ#scrollTo=XTLUthTsfTGa)
+
+1. Kliknij przycisk **Open in Colab** powyżej.
+2. W górnym menu wybierz `Środowisko wykonawcze` (Runtime) -> `Zmień typ środowiska wykonawczego` (Change runtime type) i ustaw akcelerator sprzętowy na **T4 GPU**.
+3. Uruchom wszystkie komórki od góry do dołu. Skrypt automatycznie pobierze dane z tego repozytorium, przeprowadzi testy i wygeneruje wyniki.
 
 ### 🌐 Interfejs Webowy (Gradio)
 Na samym końcu notatnika znajduje się kod uruchamiający aplikację webową za pomocą biblioteki **Gradio**. Pozwala ona na interaktywne testowanie wybranego czytelnika – po wskazaniu profilu, system w czasie rzeczywistym generuje 5 rekomendacji wraz z bezpośrednimi linkami do czytelni arXiv.
