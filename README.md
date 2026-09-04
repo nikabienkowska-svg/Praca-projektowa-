@@ -1,82 +1,150 @@
 # Porównanie skuteczności modeli rekomendacyjnych — artykuły naukowe
 
-W pełni odtwarzalny pipeline porównujący treściowe systemy rekomendacji artykułów naukowych: podejście leksykalne (**TF-IDF**, **BM25**) i semantyczne (**Sentence-Transformers `all-MiniLM-L6-v2`**), na bibliotece 36 314 artykułów z arXiv i 62 syntetycznych czytelnikach.
+Projekt PBL, temat 3: *Analiza preferencji użytkowników — system rekomendacji literatury naukowej*.
 
-Notebook pobiera dane samodzielnie, liczy wszystkie metryki od zera i zapisuje wyniki do plików CSV. Żadna liczba w tym README nie jest przepisana ręcznie — każda pochodzi z `results_summary.csv` wygenerowanego przez pipeline.
+W pełni odtwarzalny pipeline porównujący treściowe systemy rekomendacji artykułów naukowych:
+podejście **leksykalne** (TF-IDF, BM25) oraz **semantyczne** w dwóch odmianach — model ogólnego
+przeznaczenia (`all-MiniLM-L6-v2`) i model dziedzinowy trenowany na grafie cytowań prac naukowych
+(SPECTER2). Biblioteka: 36 314 artykułów z arXiv, 62 syntetycznych czytelników.
 
-## Cele
+**Żadna liczba w tym README nie jest przepisana ręcznie** — wszystkie pochodzą z plików CSV
+wygenerowanych przez pipeline.
 
-1. **H1 — trafność.** Czy model semantyczny generuje trafniejsze rekomendacje niż model leksykalny?
-2. **H2 — koszt.** Ile kosztuje budowa indeksu i obsługa zapytania w obu podejściach?
-3. **Uczciwa ewaluacja.** Klucz odpowiedzi nie może powstać metodą, którą się ocenia — inaczej ocena jest błędnym kołem.
+---
+
+## Pytanie badawcze i hipotezy
+
+> Czy semantyczna reprezentacja tekstu daje trafniejsze rekomendacje artykułów naukowych niż
+> klasyczna reprezentacja leksykalna, i jakim kosztem obliczeniowym?
+
+| | hipoteza |
+|---|---|
+| **H1** | Model semantyczny generuje trafniejsze rekomendacje niż leksykalny. |
+| **H2** | Podejście leksykalne jest istotnie tańsze obliczeniowo. |
+| **H3** | Oba podejścia istotnie przewyższają rekomendację niespersonalizowaną. |
+
+H1 rozbito na trzy pytania rozstrzygane osobno, bo w wersji ogólnej jest niefalsyfikowalna:
+czy wygrywa model **ogólny** (MiniLM vs TF-IDF), czy zmienia to model **dziedzinowy**
+(SPECTER2 vs TF-IDF) i ile z różnicy wynika ze sposobu **budowania profilu** (max-sim vs mean).
+
+## Uczciwa ewaluacja — dlaczego to nie jest błędne koło
+
+Klucz odpowiedzi nie może powstać metodą, którą się ocenia. Zbiór relewantny czytelnika to
+wszystkie artykuły spełniające jego regułę współczłonkostwa kategorii arXiv
+(`q-bio.NC AND drugie pole`), pomniejszone o artykuły startowe. **Kategorie są metadanymi
+przypisanymi przez autorów prac — żaden z porównywanych modeli ich nie widzi**, wszystkie dostają
+wyłącznie tytuł i abstrakt.
 
 ## Dane
 
-Korpus pochodzi z publicznego zrzutu arXiv.
+| plik | zawartość |
+|---|---|
+| `corpus.jsonl.gz` | **36 314** artykułów: id, tytuł, abstrakt, kategorie |
+| `users.json` | **62** profile syntetycznych czytelników, po 8 artykułów startowych |
+| `corpus_meta.json` | procedura budowy korpusu z pełnego zrzutu arXiv (5,22 GB) + reguła zakresu |
 
-- `corpus.jsonl.gz` — **36 314** artykułów z przekroju `q-bio.NC` + `cs.AI` + `cs.NE`. Rozkład kategorii jest silnie nierównomierny: `cs.AI` to 22 403 pozycje (61,7%), `q-bio.NC` — 11 902 (32,8%), `cs.NE` — 5 666 (15,6%). Nie jest to więc korpus „neurobiologiczny", tylko przekrój arXiv, w którym profile czytelników są zakotwiczone w `q-bio.NC`.
-- `users.json` — **62** profile syntetycznych czytelników, po 8 artykułów startowych każdy.
+Korpus zbudowano z publicznego zrzutu metadanych arXiv przez zawężenie nadzbioru
+`q-bio.NC` + `cs.AI` + `cs.NE` (195 149 prac) regułą: cała kategoria `q-bio.NC` jako kręgosłup
+plus prace z `cs.AI`/`cs.NE` zaklasyfikowane skrośnie do `q-bio*` albo pasujące do zestawu słów
+kluczowych z neuronauki.
 
-**Klucz odpowiedzi (ground truth).** Zbiór relewantny czytelnika to wszystkie artykuły spełniające jego regułę współczłonkostwa kategorii arXiv (`q-bio.NC AND drugie pole`), pomniejszone o artykuły startowe. Kategorie są metadanymi przypisanymi przez autorów prac — żaden z porównywanych modeli ich nie widzi, oba dostają wyłącznie tytuł i abstrakt. Ocena nie jest zatem błędnym kołem.
-
-## Wyniki
-
-Średnie po 62 czytelnikach, pełny klucz kategorialny:
-
-| silnik | P@5 | P@10 | R@10 | NDCG@5 | NDCG@10 |
-|---|---|---|---|---|---|
-| Random | 0,010 | 0,010 | 0,000 | 0,012 | 0,011 |
-| Popularity | 0,071 | 0,068 | 0,001 | 0,073 | 0,070 |
-| BM25 | 0,290 | 0,236 | 0,034 | 0,313 | 0,267 |
-| **TF-IDF** | **0,339** | **0,277** | **0,039** | **0,375** | **0,321** |
-| MiniLM (mean) | — | — | — | — | — |
-| MiniLM (max-sim) | — | — | — | — | — |
-
-Wiersze MiniLM uzupełnia się po uruchomieniu notebooka na GPU (kodowanie 36 tys. abstraktów zajmuje ok. 2 min na T4 i ok. 40 min na CPU).
-
-**Istotność.** TF-IDF pokonuje BM25 (Wilcoxon parowany na NDCG@10: p = 0,002 po korekcie Holma, r = 0,43 — efekt średni) oraz Popularity (p < 0,001, r = 0,71). Porównania z MiniLM liczy komórka 11 notebooka.
-
-**Koszt (H2).** Budowa indeksu: BM25 ok. 4 s, TF-IDF ok. 21 s, MiniLM ok. 2 min na GPU / ok. 40 min na CPU (pomiar na jednym rdzeniu; wartości zależą od sprzętu). Obsługa 62 zapytań: poniżej sekundy w każdym z silników leksykalnych.
-
-## Jak uruchomić
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1yAdOfpc8Kn4cuqiVDBcC7gBgEzjQxKSC?usp=sharing)
-
-1. Kliknij **Open in Colab**.
-2. `Środowisko wykonawcze → Zmień typ środowiska wykonawczego → T4 GPU`.
-3. Uruchom komórki od góry do dołu. Dane pobiorą się automatycznie z tego repozytorium.
-
-Lokalnie: `pip install -r requirements.txt`, następnie `jupyter lab recommender_pipeline.ipynb`. Notebook wykryje pliki danych w katalogu repozytorium i nie będzie ich pobierał ponownie.
-
-### Interfejs webowy (Gradio)
-
-Ostatnia komórka uruchamia aplikację, w której dla wybranego czytelnika i wybranego silnika widać rekomendacje z linkami do arXiv oraz oznaczeniem, które pozycje znajdują się w kluczu odpowiedzi.
-
-## Ograniczenia — co wolno, a czego nie wolno wnioskować
-
-Są istotniejsze niż same liczby i muszą znaleźć się we wnioskach.
-
-1. **Klucz kategorialny sprzyja modelom leksykalnym.** Kategorie arXiv mocno korelują z żargonem (`optics`, `quantum`, `spiking`, `fMRI`), więc wykrycie reguły `q-bio.NC AND physics.optics` jest w dużej mierze zadaniem dopasowania słów. Przewaga podejścia leksykalnego jest prawdziwa **dla tego zadania i tej definicji trafności** i nie uogólnia się na wyszukiwanie semantyczne jako takie.
-2. **Warunki nie są symetryczne.** TF-IDF jest dostrojony (`min_df`, `max_df`, bigramy, `sublinear_tf`, 50 tys. cech), MiniLM działa bez dostrajania.
-3. **MiniLM nie czyta całego abstraktu.** Limit modelu to 256 word-pieces; mediana długości tekstu w tym korpusie wynosi 266 tokenów, a **54,6% abstraktów przekracza limit**. Model widzi 86,5% tekstu, silniki leksykalne — 100%.
-4. **`all-MiniLM-L6-v2` to model ogólnego przeznaczenia.** Dla literatury naukowej właściwym punktem odniesienia byłby SPECTER2 albo `bge`/`gte`. Dopisanie takiego modelu to najbardziej wartościowe rozszerzenie tej pracy.
-5. **Czytelnicy są syntetyczni.** W danych nie ma ani jednej rzeczywistej interakcji użytkownika, a kategoria to zgrubne przybliżenie preferencji.
-6. **„Popularity" nie jest popularnością** w sensie systemów rekomendacyjnych — to proxy centralności tematycznej, bo interakcji brak.
-
-Wobec tego H1 wolno odrzucić wyłącznie w brzmieniu: *ten konkretny model semantyczny, z tą agregacją profilu i przy kategorialnej definicji trafności, nie pobił dostrojonego modelu leksykalnego*. H2 broni się bez zastrzeżeń.
-
-## Technologie
-
-Python (NumPy, pandas, SciPy) · scikit-learn · Sentence-Transformers · Gradio · Jupyter / Google Colab
+**Uwaga do opisu.** Rozkład kategorii jest silnie nierównomierny: `cs.AI` — 22 403 (61,7%),
+`q-bio.NC` — 11 902 (32,8%), `cs.NE` — 5 666 (15,6%). Nie jest to więc korpus „neurobiologiczny",
+tylko przekrój arXiv, w którym profile czytelników są zakotwiczone w `q-bio.NC`.
 
 ## Struktura repozytorium
 
 ```
-corpus.jsonl.gz             36 314 artykułów: id, tytuł, abstrakt, kategorie
-users.json                  62 profile czytelników
-recommender_pipeline.ipynb  cały pipeline: dane → modele → metryki → testy → Gradio
-requirements.txt            zależności do uruchomienia lokalnego
-data/results_summary.csv    (generowane) średnie metryki per silnik
-data/results_per_reader.csv (generowane) metryki per czytelnik
-data/results_significance.csv (generowane) testy Wilcoxona
+corpus.jsonl.gz               dane: 36 314 artykułów
+users.json                    dane: 62 profile czytelników
+corpus_meta.json              udokumentowana procedura budowy korpusu
+recommender_pipeline.ipynb    pełny pipeline + interfejs Gradio (wersja notebookowa)
+run_pipeline.py               ten sam pipeline jako skrypt (bez notebooka i internetu)
+eda.py                        eksploracja, kontrola jakości, SVD, wykresy do raportów 3 i 4
+requirements.txt              zależności
+RAPORTY/                      raporty etapowe 1–8 + raport końcowy
+data/results_summary.csv        (generowane) średnie metryki per silnik
+data/results_per_reader.csv     (generowane) metryki per czytelnik
+data/results_significance.csv   (generowane) Wilcoxon z korektą Holma
+data/results_cost.csv           (generowane) czasy budowy indeksu i zapytań
+data/results_truncation.csv     (generowane) ile tekstu widzi każdy model
+data/emb_*.npy                  (generowane) cache zanurzeń — drugie uruchomienie nie wymaga GPU
+data/fig_*.png                  (generowane) wykresy do raportu
 ```
+
+## Jak uruchomić
+
+### Wariant 1 — Colab (zalecany, ok. 6 min)
+
+1. Otwórz `recommender_pipeline.ipynb` w Google Colab.
+2. **Środowisko wykonawcze → Zmień typ → T4 GPU.**
+3. Uruchom wszystko. Dane pobiorą się samodzielnie.
+
+Ostatnia komórka uruchamia interfejs Gradio z czterema zakładkami (wyniki, istotność, widok
+pojedynczego czytelnika, analiza błędów) — to jest demo na obronę.
+
+### Wariant 2 — lokalnie, skryptem
+
+```bash
+pip install -r requirements.txt
+python3 run_pipeline.py                  # pełny, z modelami semantycznymi
+python3 run_pipeline.py --skip-semantic  # tylko leksykalne, kilkadziesiąt sekund
+```
+
+Na CPU kodowanie modelami semantycznymi trwa godzinami — dlatego zanurzenia są buforowane
+w `data/emb_*.npy` i wystarczy je policzyć raz.
+
+## Wyniki
+
+Zobacz `data/results_summary.csv` (średnie metryki), `data/results_significance.csv` (testy
+istotności) i `RAPORTY/Raport_7_wyniki_i_analiza_bledow.md` (omówienie).
+
+Metryką wiodącą jest **NDCG@10**, a nie Recall — liczność kluczy odpowiedzi waha się od 12 do
+1 918 artykułów (stosunek 160:1), więc Recall@10 jest dla największych ograniczony od góry
+przez ok. 0,005 i nie pozwala porównywać czytelników między sobą. NDCG normalizuje przez
+`min(|GT|, K)`, więc ranking idealny daje 1 niezależnie od wielkości klucza.
+
+## Ograniczenia — co wolno, a czego nie wolno wnioskować
+
+Są istotniejsze niż same liczby.
+
+1. **Klucz kategorialny sprzyja modelom leksykalnym.** Kategorie arXiv mocno korelują z żargonem
+   (`optics`, `quantum`, `spiking`, `fMRI`), więc wykrycie reguły `q-bio.NC AND physics.optics`
+   jest w dużej mierze zadaniem dopasowania słów. Ewentualna przewaga leksyki jest prawdziwa
+   **dla tego zadania i tej definicji trafności** i nie uogólnia się na wyszukiwanie semantyczne
+   jako takie.
+2. **Warunki nie są symetryczne.** TF-IDF jest dostrojony (`min_df`, `max_df`, bigramy,
+   `sublinear_tf`, 50 tys. cech), oba modele semantyczne działają bez dostrajania.
+3. **MiniLM nie czyta całego abstraktu.** Limit modelu to 256 word-pieces, mediana długości tekstu
+   w korpusie to 266 — **54,6% abstraktów przekracza limit**, model widzi 86,5% treści. SPECTER2
+   z limitem 512 obcina 0,1% i widzi 100%. Silniki leksykalne czytają 100%.
+4. **Czytelnicy są syntetyczni.** W danych nie ma ani jednej rzeczywistej interakcji użytkownika.
+5. **„Popularity" nie jest popularnością** w sensie systemów rekomendacyjnych — to proxy
+   centralności tematycznej, bo interakcji brak.
+
+## Historia poprawek
+
+Wcześniejsza wersja projektu raportowała NDCG@10 = 0,160 dla TF-IDF i 0,082 dla MiniLM.
+Różnica względem obecnych wyników **nie wynika ze zmiany modelu, tylko z naprawy pomiaru**:
+
+- **Klucz odpowiedzi był obcinany do 60 pozycji** (`gt_cap`), podczas gdy zbiory relewantne sięgają
+  1 918 artykułów — **36 z 62 czytelników** miało ucięty klucz, a trafienie w faktycznie relewantny
+  artykuł spoza tych 60 liczyło się jako pomyłka. Klucz jest teraz odtwarzany z reguły kategorii
+  dla całego korpusu, a rekonstrukcja weryfikowana asercją względem `n_relevant_total`.
+- **Dodano BM25** — Random i Popularity leżą tak nisko, że ich pobicie niczego nie dowodziło.
+- **Dodano drugą agregację profilu** (`max-sim` obok `mean`), żeby rozstrzygnąć, czy model
+  przegrywa jako model, czy jako sposób budowy profilu z ośmiu artykułów startowych.
+- **Dodano SPECTER2** — model trenowany na grafie cytowań prac naukowych, czyli na dokładnie tej
+  relacji, którą projekt modeluje.
+- **Poprawiono statystykę** — korekta Holma na porównania wielokrotne i wielkość efektu obok
+  p-value.
+- **Poprawiono liczebności korpusu w opisie danych** — wcześniejsza wersja podawała
+  `cs.AI = 15 120` przy realnych 22 403 w korpusie.
+- **Naprawiono ścieżki do danych** i **dopisano zapowiadany interfejs Gradio**.
+- **Dodano `run_pipeline.py`** — wersję skryptową, uruchamialną bez notebooka i bez internetu.
+- **Dodano `eda.py`** — eksplorację i kontrolę jakości danych, z których dotąd nie było śladu w kodzie.
+
+## Technologie
+
+Python (NumPy, pandas, SciPy, Matplotlib) · scikit-learn · Transformers / Sentence-Transformers ·
+adapters (SPECTER2) · Gradio · Jupyter / Google Colab
