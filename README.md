@@ -76,7 +76,7 @@ data/fig_*.png                  (generowane) wykresy do raportu
 
 ### Wariant 1 — Colab (zalecany, ok. 6 min)
 
-1. Otwórz `recommender_pipeline.ipynb` w Google Colab.
+1. Otwórz `Projekt_rekomendacje_program.ipynb` w Google Colab.
 2. **Środowisko wykonawcze → Zmień typ → T4 GPU.**
 3. Uruchom wszystko. Dane pobiorą się samodzielnie.
 
