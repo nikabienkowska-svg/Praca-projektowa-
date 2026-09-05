@@ -7,7 +7,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 DATA, OUT = "data", "out"
-import os; os.makedirs(OUT, exist_ok=True)
+import os, shutil
+os.makedirs(DATA, exist_ok=True)
+os.makedirs(OUT, exist_ok=True)
+for fn in ("corpus.jsonl.gz", "users.json"):
+    dst = os.path.join(DATA, fn)
+    if not os.path.exists(dst) and os.path.exists(fn):
+        try: os.link(fn, dst)
+        except Exception: shutil.copy(fn, dst)
 
 ids, titles, abstracts, cats = [], [], [], []
 with gzip.open(f"{DATA}/corpus.jsonl.gz", "rt", encoding="utf-8") as f:
