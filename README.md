@@ -4,7 +4,6 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 
 **Projekt PBL, temat 3:** *Analiza preferencji użytkowników — system rekomendacji literatury naukowej*.  
-**Zespół:** Weronika Bieńkowska, Natalia  
 
 W pełni odtwarzalny pipeline porównujący treściowe systemy rekomendacji artykułów naukowych:
 podejście **leksykalne** (TF-IDF, BM25) oraz **semantyczne** w dwóch odmianach — model ogólnego
